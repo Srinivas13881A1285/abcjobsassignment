@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,6 +45,14 @@ public class RegisterController {
         return modelAndView;
     }
 
+/*    // Return registration form template
+    @RequestMapping(value = "/users", method = RequestMethod.GET)
+    public ModelAndView showSoftwareDevelopers(ModelAndView modelAndView, User user) {
+        modelAndView.addObject("user", user);
+        modelAndView.setViewName("users");
+        return modelAndView;
+    }*/
+
     // Display forgotPassword page
     @RequestMapping(value = "/forgot", method = RequestMethod.GET)
     public ModelAndView displayForgotPasswordPage() {
@@ -68,7 +77,7 @@ public class RegisterController {
             if (bCryptPasswordEncoder.matches(rawPassword, enCodedPassword))
                 modelAndView.setViewName("users");
             else
-                modelAndView.setViewName("error");
+                modelAndView.setViewName("error-credentials");
         }
         return modelAndView;
     }
@@ -195,9 +204,9 @@ public class RegisterController {
             SimpleMailMessage passwordResetEmail = new SimpleMailMessage();
             passwordResetEmail.setFrom("support@demo.com");
             passwordResetEmail.setTo(user.getEmail());
-            passwordResetEmail.setSubject("Password Reset Request");
+            passwordResetEmail.setSubject("Password details");
             passwordResetEmail.setText("To reset your password, click the link below:\n" + appUrl
-                    + "/reset?token=" + user.getConfirmationToken());
+                    + ":8080/confirm?token=" + user.getConfirmationToken());
 
             emailService.sendEmail(passwordResetEmail);
 
@@ -266,5 +275,19 @@ public class RegisterController {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ModelAndView handleMissingParams(MissingServletRequestParameterException ex) {
         return new ModelAndView("redirect:login");
+    }
+
+    @RequestMapping(value = "/users", method = RequestMethod.GET)
+    public ModelAndView showEmployees(ModelAndView modelAndView, @RequestParam(value = "keyword",defaultValue = "") String keyword){
+        List<User> users;
+
+        if(keyword != null && !keyword.isEmpty())
+            users = userService.searchUsers(keyword);
+        else{
+            users = userService.getAllUsers();
+        }
+
+        modelAndView.addObject("employees",users);
+        return modelAndView;
     }
 }
